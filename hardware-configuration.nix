@@ -41,7 +41,7 @@
       fsType = "zfs";
     };
 
-  fileSystems."/boot" =
+  fileSystems."/boot/efis/efi1" =
     { device = "/dev/disk/by-uuid/BABA-1D56";
       fsType = "vfat";
       options = [ "fmask=0022" "dmask=0022" ];
