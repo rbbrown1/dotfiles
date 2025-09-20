@@ -7,6 +7,8 @@ RPOOL_PARTS=$(for disk in $DISKS; do echo -n "${disk}p2 "; done)
 
 partition_disk() {
     local disk="$1"
+    echo "Partitioning $disk..."
+
     # Wipe the disk
     blkdiscard -f "$disk" || true
 
@@ -40,38 +42,58 @@ for disk in $DISKS; do
     mkfs.vfat -F 32 -n EFI "${disk}p1"
 done
 
+# Format swap partitions
+for disk in $DISKS; do
+    mkswap "${disk}p3"
+done
+
+
 # Verify disks
 for disk in $DISKS; do
     parted "$disk" unit s print
 done
 
-# Setup zpool on each disk
-zpool create \
+# Create ZFS pool rpool as RAIDZ1
+echo "Creating rpool..."
+zpool create -f \
     -o ashift=12 \
     -o autotrim=on \
-    -R /mnt \
     -O acltype=posixacl \
-    -O canmount=off \
     -O dnodesize=auto \
     -O compression=lz4 \
     -O normalization=formD \
     -O relatime=on \
     -O xattr=sa \
-    -O mountpoint=/ \
-    -O encryption=aes-256-gcm \
-    -O keyformat=passphrase \
+    -O mountpoint=none \
     rpool raidz1 $RPOOL_PARTS
 
-# Create zpool datasets
-zfs create -o canmount=off -o mountpoint=none rpool/nixos
-zfs create -o mountpoint=/ rpool/nixos/root
-zfs create -o mountpoint=/home rpool/nixos/home
-zfs create -o mountpoint=/nix rpool/nixos/nix
-zfs create -o mountpoint=/var rpool/nixos/var
-zfs create -o mountpoint=/var/log rpool/nixos/var/log
+# Create encrypted nixos dataset with passphrase
+echo "Creating encrypted dataset rpool/nixos (you will be prompted for a passphrase)..."
+zfs create -o canmount=off \
+    -o mountpoint=none \
+    -o encryption=aes-256-gcm \
+    -o keyformat=passphrase \
+    rpool/nixos
 
-# Set a blank snapshot for rollback (used during boot):
-zfs snapshot rpool/nixos/root@blank
+# Create zpool datasets
+zfs create -o mountpoint=legacy rpool/nixos/root
+zfs snapshot rpool/nixos/root@blank # Set a blank snapshot for rootfs rollback
+zfs create -o mountpoint=legacy rpool/nixos/home
+zfs create -o mountpoint=legacy rpool/nixos/nix
+zfs create -o mountpoint=legacy rpool/nixos/var
+
+# Set bootfs for GRUB
+zpool set bootfs=rpool/nixos/root rpool
+
+# Mount for installation
+echo "Mounting filesystems..."
+mkdir -p /mnt/root
+mount -t zfs rpool/nixos/root /mnt
+
+mkdir -p /mnt/nix /mnt/home /mnt/var
+mount -t zfs rpool/nixos/nix /mnt/nix
+mount -t zfs rpool/nixos/home /mnt/home
+mount -t zfs rpool/nixos/var /mnt/var
 
 # Mount boot partitions
 mkdir -p /mnt/boot/efis
@@ -89,8 +111,3 @@ nixos-generate-config --root /mnt
 
 # Install
 # nixos-install --no-root-passwd
-
-# Copy boot files for redundency
-# for i in {2..3}; do
-#   cp -r /mnt/boot/efis/efi1/* /mnt/boot/efis/efi${i}/
-# done

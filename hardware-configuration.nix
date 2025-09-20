@@ -10,16 +10,11 @@
 
   boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-amd" ];
+  boot.kernelModules = [ "kvm-amd" "zfs"];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
     { device = "rpool/nixos/root";
-      fsType = "zfs";
-    };
-
-  fileSystems."/home" =
-    { device = "rpool/nixos/home";
       fsType = "zfs";
     };
 
@@ -28,32 +23,32 @@
       fsType = "zfs";
     };
 
+  fileSystems."/home" =
+    { device = "rpool/nixos/home";
+      fsType = "zfs";
+    };
+
   fileSystems."/var" =
     { device = "rpool/nixos/var";
       fsType = "zfs";
     };
 
-  fileSystems."/var/log" =
-    { device = "rpool/nixos/var/log";
-      fsType = "zfs";
-    };
-
   fileSystems."/boot/efis/efi1" =
-    { device = "/dev/disk/by-uuid/BABA-1D56";
+    { device = "/dev/disk/by-uuid/73B0-B40B";
       fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
+      options = [ "fmask=0077" "dmask=0077" ];
     };
 
   fileSystems."/boot/efis/efi2" =
-    { device = "/dev/disk/by-uuid/BABA-EC98";
+    { device = "/dev/disk/by-uuid/73B1-82FB";
       fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
+      options = [ "fmask=0077" "dmask=0077" ];
     };
 
   fileSystems."/boot/efis/efi3" =
-    { device = "/dev/disk/by-uuid/BABB-B985";
+    { device = "/dev/disk/by-uuid/73B2-56AC";
       fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
+      options = [ "fmask=0077" "dmask=0077" ];
     };
 
   swapDevices = [

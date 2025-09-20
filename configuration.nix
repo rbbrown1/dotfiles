@@ -13,19 +13,38 @@
   # Enable the Nixpkgs config for allowing unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = false;
-  boot.loader.efi.efiSysMountPoint = "/boot/efis/efi1";
-
-  # Enable ZFS and encryption support:
+  # Enable ZFS support
   boot.supportedFilesystems = [ "zfs" ];
-  boot.zfs.forceImportRoot = false;  # Safer import method
-  boot.zfs.requestEncryptionCredentials = true;  # Prompt for passphrase at boot
-  services.zfs.autoScrub.enable = true;
 
-  # zfs requires networking hostId (random or `head -c 8 /etc/machine-id`)
-  networking.hostId = "511fbac1";
+  # Generate a unique host ID for ZFS (use `head -c4 /dev/urandom | od -A none -tx4`)
+  networking.hostId = "8fc74edd";
+
+  # Use the systemd-boot EFI boot loader.
+  # Enable GRUB with ZFS and EFI support, mirrored across all ESPs
+  boot.loader = {
+    efi = {
+      canTouchEfiVariables = true;
+      efiSysMountPoint = "/boot/efis/efi1";
+    };
+    grub = {
+      enable = true;
+      efiSupport = true;
+      zfsSupport = true;
+      device = "nodev"; # For EFI, no legacy device
+      mirroredBoots = [
+        { devices = [ "nodev" ]; path = "/boot/efis/efi1"; }
+        { devices = [ "nodev" ]; path = "/boot/efis/efi2"; }
+        { devices = [ "nodev" ]; path = "/boot/efis/efi3"; }
+      ];
+    };
+  };
+
+  # ZFS services for encryption (prompts passphrase at boot)
+  boot.zfs = {
+    enableUnstable = false; # Use stable ZFS unless needed
+    forceImportRoot = true; # Allow import of encrypted pool
+    requestEncryptionCredentials = [ "rpool/nixos" ];
+  };
 
   networking.hostName = "brown-server"; # Define your hostname.
   # Pick only one of the below networking options.
@@ -46,6 +65,12 @@
   #   keyMap = "us";
   #   useXkbConfig = true; # use xkb.options in tty.
   # };
+
+  # ZFS auto-snapshot and scrub services
+  services.zfs = {
+    autoSnapshot.enable = true;
+    autoScrub.enable = true;
+  };
 
   # Enable the X11 windowing system.
   services.xserver = {
@@ -113,9 +138,6 @@
   };
 
   programs.firefox.enable = true;
-  programs.steam = {
-    enable = true;
-  };
 
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
@@ -126,6 +148,7 @@
     vim
     vscode
     wget
+    zfs
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -172,4 +195,3 @@
   system.stateVersion = "25.05"; # Did you read the comment?
 
 }
-
