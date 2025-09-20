@@ -91,6 +91,6 @@ nixos-generate-config --root /mnt
 # nixos-install --no-root-passwd
 
 # Copy boot files for redundency
-for i in {2..3}; do
-  cp -r /mnt/boot/efis/efi1/* /mnt/boot/efis/efi${i}/
-done
+# for i in {2..3}; do
+#   cp -r /mnt/boot/efis/efi1/* /mnt/boot/efis/efi${i}/
+# done

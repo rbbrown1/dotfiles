@@ -12,9 +12,6 @@
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
-  boot.initrd.postDeviceCommands = lib.mkAfter ''
-    zfs rollback -r rpool/nixos/root@blank
-  '';
 
   fileSystems."/" =
     { device = "rpool/nixos/root";
