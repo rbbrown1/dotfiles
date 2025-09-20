@@ -23,14 +23,13 @@
   # Enable GRUB with ZFS and EFI support, mirrored across all ESPs
   boot.loader = {
     efi = {
-      canTouchEfiVariables = true;
       efiSysMountPoint = "/boot/efis/efi1";
     };
     grub = {
       enable = true;
       efiSupport = true;
       zfsSupport = true;
-      device = "nodev"; # For EFI, no legacy device
+      efiInstallAsRemovable = true;
       mirroredBoots = [
         { devices = [ "nodev" ]; path = "/boot/efis/efi1"; }
         { devices = [ "nodev" ]; path = "/boot/efis/efi2"; }
@@ -90,6 +89,7 @@
     videoDrivers = [ "nvidia" ];
   };
 
+
   hardware.nvidia = {
 
     # Modesetting is required.
@@ -107,9 +107,7 @@
 	  # accessible via `nvidia-settings`.
     nvidiaSettings = true;
   };
-
-  services.displayManager.defaultSession = "none+i3";
-  programs.i3lock.enable = true;
+  
 
   # Configure keymap in X11
   # services.xserver.xkb.layout = "us";
@@ -136,7 +134,7 @@
     ];
   };
 
-  programs.firefox.enable = true;
+  # programs.firefox.enable = true;
 
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
@@ -194,3 +192,4 @@
   system.stateVersion = "25.05"; # Did you read the comment?
 
 }
+
