@@ -110,4 +110,4 @@ nixos-generate-config --root /mnt
 # /mnt/etc/nixos/hardware-configuration.nix
 
 # Install
-# nixos-install --no-root-passwd
+# nixos-install --root /mnt
