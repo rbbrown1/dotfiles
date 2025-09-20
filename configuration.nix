@@ -41,7 +41,6 @@
 
   # ZFS services for encryption (prompts passphrase at boot)
   boot.zfs = {
-    enableUnstable = false; # Use stable ZFS unless needed
     forceImportRoot = true; # Allow import of encrypted pool
     requestEncryptionCredentials = [ "rpool/nixos" ];
   };
